@@ -1,0 +1,95 @@
+---
+title: "Assignment 5"
+author: "KRamasundaram"
+date: "June 14, 2018"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+This file has the R code and output for assignment 5.
+
+### Question 1
+Utilize yob2016.txt for this question. This file is a series of popular children's names born in the year 2016 in the United States.  It consists of three columns with a first name, a gender, and the amount of children given that name.  However, the data is raw and will need cleaning to make it tidy and usable.
+
+
+```{r}
+### Question a
+
+df <- read.delim("C:\\Users\\KRamasundaram\\Documents\\MSDS 6306\\Home Work\\Assignment 5\\yob2016.txt", header = FALSE, sep =";")
+colnames(df) <- c("FirstName", "Gender", "NumberOfChildren")
+
+### Question b
+
+str(df)
+
+### Question c
+
+grep("yyy$", df$FirstName)
+df$FirstName[212]
+
+### Question d
+y2016 <- df[-212 ,]
+
+
+```
+### Question 2
+Utilize yob2015.txt for this question.  This file is similar to yob2016, but contains names, gender, and total children given that name for the year 2015.
+
+```{r}
+### Question a
+
+y2015 <- read.delim("C:\\Users\\KRamasundaram\\Documents\\MSDS 6306\\Home Work\\Assignment 5\\yob2015.txt", header = FALSE, sep =",")
+
+colnames(y2015) <- c("FirstName", "Gender", "NumberOfChildren")
+str(y2015)
+
+### Question b
+#### Obsrevation of last 10 data in year 2015 data set
+#### The names start with z. Looks like the names starting with z not popular.
+
+tail(y2015, n = 10L)
+
+### Question c
+
+final <- merge(x=y2016, y=y2015, union("FirstName", "Gender") , all = TRUE)
+final$NumberOfChildren.x[is.na(final$NumberOfChildren.x)] <- 0
+final$NumberOfChildren.y[is.na(final$NumberOfChildren.y)] <- 0
+
+```
+#### Obsrevation of last 10 data in year 2015 data set
+The names start with z. Looks like the names starting with z not popular.
+
+### Question 3
+a) Create a new column called "Total" in final that adds the amount of children in 2015 and 2016 together.  In those two years combined, how many people were given popular names?
+b) Sort the data by Total.  What are the top 10 most popular names?
+c) The client is expecting a girl!  Omit boys and give the top 10 most popular girl's names.
+d) Write these top 10 girl names and their Totals to a CSV file.  Leave out the other columns entirely.
+
+```{r}
+### Question a
+colnames(final)[3] = "NumberOfChildren2016"
+colnames(final)[4] = "NumberOfChildren2015"
+final$total <- final$NumberOfChildren2016 + final$NumberOfChildren2015
+
+####Number of people given popular names
+sum(final$total)
+
+### Question b
+SortedFinalData <- final[order(-final$total) ,]
+####Ten most popular names
+SortedFinalData$FirstName[1:10]
+
+### Question c
+####Ten topmost popular girl's names
+SortedFemaleNames <- subset(SortedFinalData, SortedFinalData$Gender == "F")
+SortedFemaleNames$FirstName[1:10]
+
+### Question d
+write.csv(SortedFemaleNames[1:10, c(1,5)], "C:\\Users\\KRamasundaram\\Documents\\MSDS 6306\\Home Work\\Assignment 5\\BabyGirlNames.txt", row.names = FALSE)
+
+```
