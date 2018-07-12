@@ -1,0 +1,139 @@
+---
+title: "Assignment 9"
+author: "Kumar Ramasundaram"
+date: "July 10, 2018"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Github repository for this project is 
+https://github.com/kramasundaram/Homework/blob/master/Assignment%209
+
+## R Markdown
+This file has the R code and output for assignment 9.
+
+
+```{r LoadLibraries}
+#Load necessary libraries for the project.
+library(XML)
+library(RCurl)
+library(rvest)
+library(ggplot2)
+```
+
+## Question 1
+Scrape  the IMDB webpage http://www.imdb.com/title/tt1201607/fullcredits?ref_=tt_ql_1. Of  particular  interest  is  the  table  of  the  Cast  in  order  of  crediting.    Please  scrape  this  table and  make  it  a  data.frame() of  the  Cast  in  your  R  environment
+
+```{r}
+# Read and clean the data from IMDB website
+url <- 'https://www.imdb.com/title/tt1201607/fullcredits?ref_=tt_ql_1'
+webpage <- read_html(url)
+
+# read the cast information and store it in text format. Find the container name for the cast  using slector gadget tool. I found .itemprop span container is for the cast.
+name_html <- html_nodes(webpage,'.itemprop span')
+cast_data <- html_text(name_html)
+head(cast_data)
+
+# Remove any leading or trailing white spaces
+cast_data <- trimws(cast_data, which = c("both"))
+
+# Cast information in a data frame
+cast_df <- as.data.frame(cast_data)
+class(cast_df)
+dim(cast_df)
+
+# Read the character information. .character is the container name for character information.
+charac_html <- html_nodes(webpage,'.character')
+charac_data <- html_text(charac_html)
+head(charac_data)
+
+# Clean the data. First remove new line character.
+charac_data <- gsub("\\n", "", charac_data)
+
+# Remove leading and trailing white spaces
+charac_data <- trimws(charac_data, which = c("both"))
+charac_df <- as.data.frame(charac_data)
+class(charac_df)
+dim(charac_df)
+
+# put cast and character information in a data frame
+name_character <- data.frame(cast_df, charac_df)
+
+# Question 1 c
+# Remove NAs, empty rows or rows with special character
+name_character <- name_character[!apply(is.na(name_character) | name_character == "" | name_character == "...", 1, all),]
+
+# Columns names for the two columns
+colnames(name_character) <- c("Actor", "Character")
+head(name_character)
+tail(name_character)
+str(name_character)
+class(name_character)
+dim(name_character)
+
+# Question 1 d
+# Split  the  Actor's  name  into  twocolumns:  FirstName  andSurname.    Keep  in  mind  that  some actors/actresses  have  middle  names  as  well.    Please  make  sure  that  the  middle  names  are  in  theFirstName  column,  in  addition  to  the  first  name
+
+# Split the actor names by space and assign only the last name to last name. Everything else is part of first name
+actor_name = strsplit(as.character(name_character$Actor), ' ')
+firstname = sapply(actor_name, function(x) x[1:length(x)-1])
+firstname = sapply(firstname, paste, collapse = " ")
+lastname = sapply(actor_name, function(x) x[length(x)])
+name_df <- data.frame(firstname, lastname, name_character$Character)
+
+# Question 1 d
+# Present  the  first  10  rows  of  the data.frame()-It  should  have  only  FirstName,  Surname,  and  Character  columns.
+
+# column names and printing first 10 records
+colnames(name_df) <- c("First Name", "Last Name", "Character")
+head(name_df, 10)
+
+```
+### Question 2
+On  the  ESPN  website,  there  are  statistics  of  each  NBA  player.    Navigate  to  the  San  Antonio  Spurscurrent  statistics  (likely  http://www.espn.com/nba/team/stats/_/name/sa/san-antonio-spurs).    You  are  interested  in  the  Shooting  Statisticstable
+```{r}
+# Question 2 a & b
+# Read Player Shooting Statistics Table
+espn_table = readHTMLTable('http://www.espn.com/nba/team/stats/_/name/sa/san-antonio-spurs', which = 2)
+head(espn_table)
+tail(espn_table)
+class(espn_table)
+
+# Question 2 c
+# Remove the row that has the total
+espn_table <- espn_table[-c(16) ,]
+
+# Assign Column Names
+colnames(espn_table) <- c("PLAYER", "FGM", "FGA", "FG%", "3PM", "3PA" , "3P%",  "FTM",  "FTA", "FT%", "2PM",  "2PA", "2P%", "PPS", "AFG%")
+
+# Remove the row that has column names
+espn_table <- espn_table[-c(1) ,]
+
+
+# Separate the player name and position
+player_name = strsplit(as.character(espn_table$PLAYER), ',')
+playername = sapply(player_name, function(x) x[1])
+position = sapply(player_name, function(x) x[2])
+
+# Create data frame with two new columns and other statistics from old datat frame
+spurs_table <- data.frame(playername, position, espn_table[2:length(espn_table)])
+
+# Convert the column that are numbers
+col_name <- c(3:ncol(spurs_table))
+spurs_table[, col_name] <- lapply(spurs_table[, col_name], function(x) as.numeric(as.character(x)))
+
+# first 10 data
+head(spurs_table)
+
+# check the data type of the columns
+str(spurs_table)
+
+# Question 2d
+player_plot <- ggplot(data = spurs_table, aes(x=spurs_table$playername, y = spurs_table$FG., fill = spurs_table$position)) + geom_bar(stat="identity", width = 0.5) + labs(title = "Player's Field Goal Percentage", x = " Player Name", y = "Field Goal Percentage", fill = "Player Position") + theme(plot.title = element_text(hjust = 0.5))
+player_plot + coord_flip()
+
+```

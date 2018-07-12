@@ -1,0 +1,21 @@
+---
+title: "README"
+author: "Kumar Ramasundaram"
+date: "July 10, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 9
+## Web Scraping
+In this assignment, we used xml, rvest and rcurl for web scraping. We showed couple of ways of web scraping. In one case, we are readding the table directly. In the second case, we are using selector gadget tool to identify the container and reading the contents from there. 
+
+
+## Topics Covered
+Web scraping
+Data Cleanup
+Visualization
+
