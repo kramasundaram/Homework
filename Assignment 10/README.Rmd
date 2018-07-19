@@ -1,0 +1,21 @@
+---
+title: "README"
+author: "Kumar Ramasundaram"
+date: "July 19, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 10
+## Data Analysis
+In this assignment, we looked at VA Medical Centers in mainland US. You can look at this work to find out the states that have high and low number of VAs. I have suggested the region that should be considered for the new VA. This is based on visual analysis of the bar chart. There are lot of other factors that should be considered for choosing the location for a new VA. If you are interested, please let me know and I will do a detailed analysis.
+
+Disclaimer: This is an academic project and intended for learning data analysis skills.
+
+## Topics Covered
+Data Cleanup, Data Merge
+
+

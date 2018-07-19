@@ -1,0 +1,116 @@
+---
+title: "Assignment 10"
+author: "Kumar Ramasundaram"
+date: "July 19, 2018"
+output: html_document
+---
+
+## R Markdown
+This file has the R code and output for assignment 9.
+
+
+# Github repository for this project is 
+https://github.com/kramasundaram/Homework/upload/master/Assignment%2010
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r LoadLibraries}
+#Load necessary libraries for the project.
+library(XML)
+library(RCurl)
+library(rvest)
+library(ggplot2)
+```
+
+## Question 1
+
+```{r}
+# a) This data set is a survey of every known healthcare facility that offers mental health services in the United States in 2015. Load the data into global environment
+
+# load the data
+load("~/MSDS 6306/Assignment 10/N-MHSS-2015-DS0001-bndl-data-r/N-MHSS-2015-DS0001-data/N-MHSS-2015-DS0001-data-r.rda")
+
+
+# b) Please create code which lists the State abbreviations without their counts, one abbreviation per State value.
+mh_state <- mh2015_puf$LST
+head(mh_state, 10)
+
+# c) c. Filter the data.frame from 1A. We are only interested in the Veterans Administration (VA) medical centers in the mainland United States
+
+# Filter based on the facility type. Looking for VA Medical Center.
+va_services <- mh2015_puf[mh2015_puf$FACILITYTYPE == "Veterans Administration medical center (VAMC) or other VA health care facility" ,]
+
+# Check the dimension and compare it with codebook.
+dim(va_services)
+
+
+# Remove the states that are not in the mainland.
+va_services <- va_services[(va_services$LST != "AK    " & va_services$LST !="As    " & va_services$LST !="GU    " & va_services$LST !="HI    " & va_services$LST !="PR    " & va_services$LST !="VI    ")  ,]
+
+
+# d) Create a ggplot barchart of this filtered data set. Vary the bar’s colors by what State it has listed. Give it an appropriately professional title that is centered.
+
+# group them by state and number of VA centers by state
+vastate_count <- as.data.frame(table(va_services$LST))
+
+# Assign Column names
+colnames(vastate_count) <- c("State", "Count")
+
+# Remove States that do not have VAMC
+vastate_count <- vastate_count[vastate_count$Count != 0 ,]
+va_plot <- ggplot(data = vastate_count, aes(x=vastate_count$State, y = vastate_count$Count, fill = vastate_count$State))+ geom_bar(stat="identity", width = 0.5) + labs(title = "Veterans Administration Medical Center in US Mainland", x = "State", y = "Count", fill = "State")+ theme (legend.position = "none", text = element_text(size = 8), plot.title = element_text(hjust = 0.5)) 
+va_plot + coord_flip()
+
+
+```
+
+
+## Question 2
+```{r}
+# a) Read statesize.csv into your R environment. State size file did not have the data for DC. I added the information for DC as there is a VA in DC and I want that to be included in the analysis.
+state_size <- read.csv("C:\\Users\\KRamasundaram\\Documents\\MSDS 6306\\Assignment 10\\statesize.csv")
+
+# Use Use paste() on LST column to get an idea of how state abbreviations are stored
+paste(va_services$LST)
+```
+
+## Question 2 a
+LST column has white spaces after the state abbreviation. This has to be removed so that we can merge this data with state size data.
+
+```{r}
+# b) Correct the problem with the LST column using any method in R that is programmatic and easily understandable.
+
+# LST column has white space. First remove the white space.
+va_services <- data.frame(lapply( va_services, trimws), stringsAsFactors = FALSE)
+
+# Merge the data frame by state abbreviation
+vastate_consol <- merge(va_services, state_size, by.x = "LST", by.y = "Abbrev")
+vastate_count <- as.data.frame(table(vastate_consol$LST))
+colnames(vastate_count) <- c("State", "Count")
+
+# c) Calculate a new variable in your combined data.frame() which indicates the VA hospitals per thousand square miles.
+vastate_chart_data <- merge(vastate_count, state_size, by.x = "State", by.y = "Abbrev")
+vastate_chart_data$VAPerArea <- vastate_chart_data$Count /(vastate_chart_data$SqMiles/1000)
+vastate_chart_data$VAPerArea <- ifelse(vastate_chart_data$VAPerArea>vastate_chart_data$Count, vastate_chart_data$Count, vastate_chart_data$VAPerArea) 
+
+# d) Create another ggplot which considers the VAs per square thousand miles, rather than just frequency.
+va_plot_region <- ggplot(data = vastate_chart_data, aes(x=reorder(vastate_chart_data$State, -vastate_chart_data$VAPerArea), y = vastate_chart_data$VAPerArea, fill = vastate_chart_data$Region))+ geom_bar(stat="identity", width = 0.5) + labs(title = "VAs per Thousand Square Miles", x = "State", y = "In \'000 Square Miles", fill = "Region") + theme (text = element_text(size = 8), plot.title = element_text(hjust = 0.5))
+va_plot_region + coord_flip()
+
+```
+
+## Question 2 e
+What patterns do you see? By this metric, is there any region that seems relatively
+high for VA medical centers per thousand square miles? How about low? Given these
+data, what advice might you give your boss before you start modeling (and why)?
+
+Looking at the bar graphs, northeast region has higher number of VA medical centerper thousand square mile. Rhode Island, New Jersey, Massachusstes are the states that have higher number of VAs per thousand square miles. 
+
+On the other hand, western region has lower number of VAs per thousand square miles. Montana, Wyoming and UT are some of the states with lower number of VAs.
+
+Based on this visual analysis, I suggest looking into adding VA center in western region of the US.
+
+## Source
+Data used for this project is from https://datafiles.samhsa.gov/study-dataset/national-mental-health-services-survey-2015-n-mhss-2015-ds0001-nid17098
