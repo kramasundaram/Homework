@@ -1,0 +1,124 @@
+---
+title: "Assignment 11"
+author: "Kumar Ramasundaram"
+date: "July 26, 2018"
+output: html_document
+---
+
+
+## R Markdown
+This file has the R code and output for assignment 11.
+
+
+# Github repository for this project is 
+https://github.com/kramasundaram/Homework/upload/master/Assignment%2011
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r LoadLibraries}
+#Load necessary libraries for the project.
+library(fpp)
+library(fpp2)
+library(ggplot2)
+library (dplyr)
+library (dygraphs)
+library (xts)
+library(lubridate)
+```
+
+
+## Question 1
+
+```{r}
+# 1 a help, 
+help("EuStockMarkets")
+data("EuStockMarkets")
+summary(EuStockMarkets)
+
+# 1 b Plot of the data
+plot(EuStockMarkets[, "DAX"], main = "Daily Closing Index DAX from 1990", xlab = "Year", ylab = "Stock Index", col = "blue")
+# adding a vertical line to divide pre and post 1999
+abline(v=1997, col="red")
+
+# 1 c Decomposing time series data and plotting the components
+eu.decomp <- decompose (EuStockMarkets[, "DAX"], type = "multiplicative")
+plot(eu.decomp, col = "blue")
+# adding a vertical line to divide pre and post 1999
+abline(v=1997, col="red")
+
+```
+
+# Question 2
+```{r}
+# 2 a plotting maxtemp
+help(maxtemp)
+autoplot(maxtemp)
+plot(maxtemp, ylab = "Maximum  Temperature in Merlbourne, Australia", xlab = "Year")
+
+# understanding the data
+start(maxtemp)
+end(maxtemp)
+
+# 2 b aasigning data from 1990 to a data frame
+mytemp <- window(maxtemp, start= 1990, end = 2018)
+
+# 2 c SES to predict five years
+fit1 <- ses(mytemp)
+summary(fit1$model)
+
+fit1 <- ses(mytemp, initial = "simple", h = 5)
+plot (fit1, main = "", xlim = c(1990, 2022), ylab = "Stock Index", xlab = "Year", col = "Blue", type = "o")
+lines (fitted(fit1), col = "red", type = "o")
+lines(fit1$mean, col = "red", type = "o")
+
+
+# 2 d Holt's linear trend model
+fit3 <- holt(mytemp, damped = TRUE, initial = "optimal", h = 5)
+summary(fit3$model)
+plot (mytemp, main = "", xlim = c(1990, 2022), ylab = "Stock Index", xlab = "Year", col = "Blue", type = "o")
+lines (fitted(fit3), col = "red", type = "o")
+lines(fit3$mean, col = "red", type = "o")
+
+# 2 e
+# AICc value of the fitted model from simple exponential smoothing is 141.53 and from Holt's damped linear trend is 145.59. In this case simple exponential smoothing model is better.
+```
+
+## Question 3
+
+```{r}
+
+# 3 a reading the data from csv file into a data frame
+GregData <- read.csv("C:\\Users\\KRamasundaram\\Documents\\MSDS 6306\\Assignment 11\\Unit11TimeSeries_Gregorovitch.csv", header = FALSE)
+OlivanderData <- read.csv("C:\\Users\\KRamasundaram\\Documents\\MSDS 6306\\Assignment 11\\Unit11TimeSeries_Ollivander.csv", header = FALSE)
+
+# 3 b converting the date column to correct class
+GregData$V1 <- as.Date(GregData$V1, format = "%m/%d/%Y")
+OlivanderData$V1 <- as.Date(OlivanderData$V1, format = "%m/%d/%Y")
+
+# 3 c converting the data frome to time series format
+gregDate <- xts(GregData, order.by = GregData$V1)
+colnames(gregDate) <- c("Date", "Value")
+OlivanderDate <- xts(OlivanderData, order.by = OlivanderData$V1)
+# chaning the column names
+colnames(OlivanderDate) <- c("Date", "Value")
+
+# 3 d binding time series data
+consolidated <- cbind(gregDate$Value, OlivanderDate$Value)
+
+
+# 3 e plotting the time series data
+# with correct labels
+dygraph(consolidated, xlab= "Year", ylab = "Value", main = "Wands Sold by year") %>%
+  # name for the series and different colors for the series
+  dySeries(name = "Value", label = "Gregorovitch", color = "green") %>%
+  dySeries(name = "Value.1", label = "Ollivander", color = "red") %>%
+  # activating the range selector
+  dyRangeSelector (dateWindow = c("1970-01-01", "2017-01-01")) %>%
+  # shading 1995-1999
+  dyShading(from = "1995-01-01", to = "1999-01-01") %>%
+  # highlighting the line
+  dyHighlight(highlightCircleSize = 5, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = FALSE, highlightSeriesOpts = list(strokeWidth = 2))
+```

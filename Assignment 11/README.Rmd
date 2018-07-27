@@ -1,0 +1,19 @@
+---
+title: "README"
+author: "Kumar Ramasundaram"
+date: "July 26, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment 11
+## Data Analysis
+In this assignment, we analyzed time series data, building model from time series data, fitting the model and predicting. We compared the models using AICc. We merged two time series data and used dygrpahs to build interactive graph
+
+## Topics Covered
+Time Series Data, plotting using dygraph, fitting and predicitng using ses and holt linear trend.
+
+
